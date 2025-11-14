@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>🎬 Movie Recommendation System</title>
+  <style>
+    body {
+      background: linear-gradient(to right, #141E30, #243B55);
+      font-family: Arial, sans-serif;
+      color: white;
+      text-align: center;
+    }
+    h1 {
+      color: #ffffff;
+      margin-top: 20px;
+    }
+    input, button {
+      padding: 10px;
+      margin: 10px;
+      border-radius: 8px;
+      border: none;
+      font-size: 16px;
+    }
+    button {
+      background: #e50914;
+      color: white;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #f40612;
+    }
+    .results {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-top: 20px;
+    }
+    .movie-card {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      padding: 15px;
+      margin: 10px;
+      width: 250px;
+      text-align: center;
+    }
+    .movie-card img {
+      width: 100%;
+      border-radius: 10px;
+    }
+    .movie-title {
+      font-weight: bold;
+      margin-top: 10px;
+      font-size: 18px;
+    }
+    .movie-desc {
+      font-size: 14px;
+      color: #ddd;
+      margin-top: 8px;
+    }
+  </style>
+</head>
+<body>
+  <h1>🍿 Movie Recommendation System</h1>
+  <p>Choose a movie (English or Hindi) and get recommendations!</p>
+  
+  <input list="movieList" id="movieInput" placeholder="Enter movie name">
+  <datalist id="movieList"></datalist>
+  <button onclick="getRecommendations()">Recommend</button>
+  
+  <div class="results" id="results"></div>
+  
+  <script>
+
+async function loadMovies() {
+      try {
+        let res = await fetch("http://127.0.0.1:5000/movies");
+        let data = await res.json();
+        let movieList = document.getElementById("movieList");
+        movieList.innerHTML = "";
+        data.forEach(title => {
+          let option = document.createElement("option");
+          option.value = title;
+          movieList.appendChild(option);
+        });
+      } catch (err) {
+        console.error("Error loading movies:", err);
+      }
+    }
+
+    async function getRecommendations() {
+      let movie = document.getElementById("movieInput").value;
+      if (!movie) {
+        alert("Please enter a movie name");
+        return;
+      }
+      let res = await fetch(`http://127.0.0.1:5000/recommend?movie=${encodeURIComponent(movie)}`);
+      let data = await res.json();
+      let resultsDiv = document.getElementById("results");
+      resultsDiv.innerHTML = "";
+      if (data.length === 0) {
+        resultsDiv.innerHTML = "<p>No recommendations found.</p>";
+        return;
+      }
+      data.forEach(m => {
+        resultsDiv.innerHTML += `
+          <div class="movie-card">
+            <img src="${m.poster || 'https://via.placeholder.com/250x375?text=No+Image'}" alt="Poster">
+            <div class="movie-title">${m.title}</div>
+            <div class="movie-desc">
+              ${m.description}<br><br><span style="color:#FFD700;"><b>Similarity: ${(m.score * 100).toFixed(2)}%</b></span>
+            </div>
+          </div>`;
+      });
+    }
+
+    window.onload = loadMovies;
+  </script>
+</body>
+</html>
